@@ -16,7 +16,7 @@ window.registerExtension("dependencycheck/report", function(options) {
 		metricKeys : "report"
 	}).then(function(response) {
 		if (isDisplayed) {
-			var htmlString = response.component.measures.filter(measure => measure.metric === "report")[0].value;
+			var htmlString = response.component.measures.filter(measure => measure.metric === "report")[0].value.replace(/<a href="#/gi,'<a href="about:srcdoc#');
 			var currentEl = options.el;
 			while (currentEl.id !== "container") {
 				currentEl.classList.add("dependency-check-report-content");
@@ -26,7 +26,7 @@ window.registerExtension("dependencycheck/report", function(options) {
 			currentEl.classList.add("dependency-check-report-container");
 			
 			var reportFrame = document.createElement("iframe");
-			reportFrame.sandbox.value = "allow-scripts allow-same-origin";
+			reportFrame.sandbox.value = "allow-scripts allow-same-origin allow-popups allow-top-navigation";
 			reportFrame.style.border = "none";
 			reportFrame.style.flex= "1 1 auto";
 			reportFrame.srcdoc = htmlString;
