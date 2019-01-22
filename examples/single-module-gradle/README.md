@@ -1,14 +1,15 @@
-Example Single Module Maven Project
+Example Single Module Gradle Project
 =====================================
 
-Integrates [Dependency-Check] analysis and reporting into SonarQube v6.7 or higher in a single module (flat) Maven project.
+Integrates [Dependency-Check] analysis and reporting into SonarQube v6.7 or higher in a single module (flat) Gradle project.
 
 Usage
 -------------------
 
 ```
-mvn clean package dependency-check:check
-mvn sonar:sonar
+gradle build
+gradle dependencyCheckAnalyze
+gradle sonarqube
 ```
 
 Copyright & License

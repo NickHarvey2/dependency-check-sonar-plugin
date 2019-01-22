@@ -17,27 +17,5 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package org.sonar.dependencycheck.ui;
+@javax.annotation.ParametersAreNonnullByDefault package org.sonar.dependencycheck.report;
 
-import org.junit.Test;
-
-import static org.fest.assertions.Assertions.assertThat;
-
-public class DependencyCheckWidgetTest {
-
-    @Test
-    public void test_rails_template() throws Exception {
-        DependencyCheckWidget widget = new DependencyCheckWidget();
-        assertThat(widget.getClass().getResource(widget.getTemplatePath()))
-                .as("Template not found: " + widget.getTemplatePath())
-                .isNotNull();
-    }
-
-    @Test
-    public void test_metadata() throws Exception {
-        DependencyCheckWidget widget = new DependencyCheckWidget();
-        assertThat(widget.getId()).containsIgnoringCase("dependencycheck");
-        assertThat(widget.getTitle()).contains("Known Vulnerabilities");
-    }
-
-}

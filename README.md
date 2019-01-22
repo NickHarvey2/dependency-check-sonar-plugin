@@ -2,23 +2,24 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/412eb95dd49d47bca70d53b685fb247a)](https://www.codacy.com/app/stevespringett/dependency-check-sonar-plugin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=stevespringett/dependency-check-sonar-plugin&amp;utm_campaign=Badge_Grade)
 [ ![Download](https://api.bintray.com/packages/stevespringett/owasp/dependency-check-sonar/images/download.svg) ](https://bintray.com/stevespringett/owasp/dependency-check-sonar/_latestVersion)
 
-Dependency-Check Plugin for SonarQube 6.x
+Dependency-Check Plugin for SonarQube 7.x
 =====================================
 
-Integrates [OWASP Dependency-Check] reports into SonarQube v6.3 or higher. 
+Integrates [Dependency-Check] reports into SonarQube v7.3 or higher.
 
-Please see the [SonarQube 5.x] branch for older SonarQube 5.x support
+Please see the [SonarQube 6.x] branch for SonarQube 6.x LTS support. The project will try to backport all code from master branch, as long as the LTS version is supported.
+Please see the [SonarQube 5.x] branch for older SonarQube 5.x support.
+
 
 About Dependency-Check
 -------------------
 Dependency-Check is a utility that attempts to detect publicly disclosed vulnerabilities contained within project dependencies. It does this by determining if there is a Common Platform Enumeration (CPE) identifier for a given dependency. If found, it will generate a report linking to the associated CVE entries.
 
-Dependency-Check supports the identification of project dependencies in a number of different languages including Java, .NET, and Python.
+Dependency-Check supports the identification of project dependencies in a number of different languages including Java, .NET, Node.js, Ruby, and Python.
 
-Screenshots
+Note
 -------------------
-
-![alt tag](screenshots/dashboard-widget.png)
+**This SonarQube plugin does not perform analysis**, rather, it reads existing Dependency-Check reports. Use one of the other available methods to scan project dependencies and generate the necessary XML report which can then be consumed by this plugin. Refer to the [Dependency-Check project](https://github.com/jeremylong/DependencyCheck) for relevant [documentation](https://jeremylong.github.io/DependencyCheck/).
 
 Metrics
 -------------------
@@ -28,13 +29,13 @@ The plugin keeps track of a number of statistics including:
 * Total number of dependencies scanned
 * Total number of vulnerabilities found across all dependencies
 * Total number of vulnerable components
-* Total number of high, medium, and low severity vulnerabilities
+* Total number of critical, high, medium, and low severity vulnerabilities
 
 Additionally, the following two metrics are defined:
 
 __Inherited Risk Score (IRS)__
 
-(high * 5) + (medium * 3) + (low * 1)
+(critical * 7) + (high * 5) + (medium * 3) + (low * 1)
 
 The IRS is simply a weighted measurement of the vulnerabilities inherited by the 
 application through the use of vulnerable components. It does not measure the 
@@ -78,6 +79,22 @@ In this example, both the XML and HTML reports are specified. Only the XML repor
 report is also available, it greatly enhances the usability of the SonarQube plugin by incorporating the actual
 Dependency-Check HTML report in the SonarQube project.
 
+To configure the severity of the created issues you can optionally specify the minimum score for each severity with the following parameter. Specify a score of `-1` to completely disable a severity. 
+
+```ini
+sonar.dependencyCheck.severity.blocker=9.0
+sonar.dependencyCheck.severity.critical=7.0
+sonar.dependencyCheck.severity.major=4.0
+sonar.dependencyCheck.severity.minor=0.0
+```
+
+In large projects you have many dependencies with (hopefully) no vulnerabilities. The following configuration summarize all vulnerabilities of one dependency into one issue.
+
+```ini
+sonar.dependencyCheck.summarize=true
+sonar.dependencyCheck.summarize=false (default)
+```
+
 Ecosystem
 -------------------
 
@@ -89,19 +106,18 @@ Dependency-Check is available as a:
 * Maven Plugin
 * SonarQube Plugin
 
-NOTE: The Sonar plugin does not generate reports, it reads existing reports. Use one of the other available methods to scan project dependencies and generate the necessary XML report.
-
 Copyright & License
 -------------------
 
-OWASP Dependency-Check Sonar Plugin is Copyright (c) Steve Springett. All Rights Reserved.
+Dependency-Check Sonar Plugin is Copyright (c) Steve Springett. All Rights Reserved.
 
-OWASP Dependency-Check is Copyright (c) Jeremy Long. All Rights Reserved.
+Dependency-Check is Copyright (c) Jeremy Long. All Rights Reserved.
 
 Permission to modify and redistribute is granted under the terms of the [LGPLv3] license.
 
   [LGPLv3]: http://www.gnu.org/licenses/lgpl.txt
   [bintray]: https://bintray.com/stevespringett/owasp/dependency-check-sonar/
   [GitHub]: https://github.com/stevespringett/dependency-check-sonar-plugin/releases
-  [OWASP Dependency-Check]: https://www.owasp.org/index.php/OWASP_Dependency_Check
+  [Dependency-Check]: https://www.owasp.org/index.php/OWASP_Dependency_Check
   [SonarQube 5.x]: https://github.com/stevespringett/dependency-check-sonar-plugin/tree/SonarQube_5.x
+  [SonarQube 6.x]: https://github.com/stevespringett/dependency-check-sonar-plugin/tree/SonarQube_6.x

@@ -19,50 +19,62 @@
  */
 package org.sonar.dependencycheck.parser;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.staxmate.SMInputFactory;
 import org.codehaus.staxmate.in.SMHierarchicCursor;
 import org.codehaus.staxmate.in.SMInputCursor;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 import org.sonar.dependencycheck.base.DependencyCheckUtils;
-import org.sonar.dependencycheck.parser.element.*;
-
-import javax.xml.stream.XMLStreamException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
+import org.sonar.dependencycheck.parser.element.Analysis;
+import org.sonar.dependencycheck.parser.element.Dependency;
+import org.sonar.dependencycheck.parser.element.Evidence;
+import org.sonar.dependencycheck.parser.element.ProjectInfo;
+import org.sonar.dependencycheck.parser.element.ScanInfo;
+import org.sonar.dependencycheck.parser.element.Vulnerability;
 
 public class ReportParser {
 
-    public Analysis parse(InputStream inputStream) {
+    private static final Logger LOGGER = Loggers.get(ReportParser.class);
 
-        SMInputFactory inputFactory = DependencyCheckUtils.newStaxParser();
-        try {
-            SMHierarchicCursor rootC = inputFactory.rootElementCursor(inputStream);
-            rootC.advance(); // <analysis>
-
-            SMInputCursor childCursor = rootC.childCursor();
-
-            ScanInfo scanInfo = null;
-            ProjectInfo projectInfo = null;
-            Collection<Dependency> dependencies = null;
-
-            while (childCursor.getNext() != null) {
-                String nodeName = childCursor.getLocalName();
-                if ("scanInfo".equals(nodeName)) {
-                    scanInfo = processScanInfo(childCursor);
-                } else if ("projectInfo".equals(nodeName)) {
-                    projectInfo = processProjectInfo(childCursor);
-                } else if ("dependencies".equals(nodeName)) {
-                    dependencies = processDependencies(childCursor);
-                }
-            }
-            return new Analysis(scanInfo, projectInfo, dependencies);
-        } catch (XMLStreamException e) {
-            throw new IllegalStateException("XML is not valid", e);
-        }
+    private ReportParser() {
+        // do nothing
     }
 
-    private Collection<Dependency> processDependencies(SMInputCursor depC) throws XMLStreamException {
+    public static Analysis parse(InputStream inputStream) throws XMLStreamException {
+
+        SMInputFactory inputFactory = DependencyCheckUtils.newStaxParser();
+        SMHierarchicCursor rootC = inputFactory.rootElementCursor(inputStream);
+        rootC.advance(); // <analysis>
+
+        SMInputCursor childCursor = rootC.childCursor();
+
+        ScanInfo scanInfo = null;
+        ProjectInfo projectInfo = null;
+        Collection<Dependency> dependencies = Collections.emptyList();
+
+        while (childCursor.getNext() != null) {
+            String nodeName = childCursor.getLocalName();
+            if ("scanInfo".equals(nodeName)) {
+                scanInfo = processScanInfo(childCursor);
+            } else if ("projectInfo".equals(nodeName)) {
+                projectInfo = processProjectInfo(childCursor);
+            } else if ("dependencies".equals(nodeName)) {
+                dependencies = processDependencies(childCursor);
+            }
+        }
+        return new Analysis(scanInfo, projectInfo, dependencies);
+    }
+
+    private static Collection<Dependency> processDependencies(SMInputCursor depC) throws XMLStreamException {
         Collection<Dependency> dependencies = new ArrayList<>();
         SMInputCursor cursor = depC.childElementCursor("dependency");
         while (cursor.getNext() != null) {
@@ -71,7 +83,7 @@ public class ReportParser {
         return dependencies;
     }
 
-    private Dependency processDependency(SMInputCursor depC) throws XMLStreamException {
+    private static Dependency processDependency(SMInputCursor depC) throws XMLStreamException {
         Dependency dependency = new Dependency();
         SMInputCursor childCursor = depC.childCursor();
         while (childCursor.getNext() != null) {
@@ -94,8 +106,8 @@ public class ReportParser {
         return dependency;
     }
 
-    private Collection<Vulnerability> processVulnerabilities(SMInputCursor vulnC) throws XMLStreamException {
-        Collection<Vulnerability> vulnerabilities = new ArrayList<>();
+    private static List<Vulnerability> processVulnerabilities(SMInputCursor vulnC) throws XMLStreamException {
+        List<Vulnerability> vulnerabilities = new ArrayList<>();
         SMInputCursor cursor = vulnC.childElementCursor("vulnerability");
         while (cursor.getNext() != null) {
             vulnerabilities.add(processVulnerability(cursor));
@@ -103,7 +115,7 @@ public class ReportParser {
         return vulnerabilities;
     }
 
-    private Vulnerability processVulnerability(SMInputCursor vulnC) throws XMLStreamException {
+    private static Vulnerability processVulnerability(SMInputCursor vulnC) throws XMLStreamException {
         Vulnerability vulnerability = new Vulnerability();
         SMInputCursor childCursor = vulnC.childCursor();
         while (childCursor.getNext() != null) {
@@ -111,7 +123,13 @@ public class ReportParser {
             if ("name".equals(nodeName)) {
                 vulnerability.setName(StringUtils.trim(childCursor.collectDescendantText(false)));
             } else if ("cvssScore".equals(nodeName)) {
-                vulnerability.setCvssScore(StringUtils.trim(childCursor.collectDescendantText(false)));
+                String cvssScore = StringUtils.trim(childCursor.collectDescendantText(false));
+                try {
+                    vulnerability.setCvssScore(Float.parseFloat(cvssScore));
+                } catch (NumberFormatException e) {
+                    LOGGER.warn("Could not parse CVSS-Score {} to Float. Setting CVSS-Score to 0.0", cvssScore);
+                    vulnerability.setCvssScore(0.0f);
+                }
             } else if ("severity".equals(nodeName)) {
                 vulnerability.setSeverity(StringUtils.trim(childCursor.collectDescendantText(false)));
             } else if ("cwe".equals(nodeName)) {
@@ -123,7 +141,7 @@ public class ReportParser {
         return vulnerability;
     }
 
-    private Collection<Evidence> processEvidenceCollected(SMInputCursor ecC) throws XMLStreamException {
+    private static Collection<Evidence> processEvidenceCollected(SMInputCursor ecC) throws XMLStreamException {
         Collection<Evidence> evidenceCollection = new ArrayList<>();
         SMInputCursor cursor = ecC.childElementCursor("evidence");
         while (cursor.getNext() != null) {
@@ -132,7 +150,7 @@ public class ReportParser {
         return evidenceCollection;
     }
 
-    private Evidence processEvidence(SMInputCursor ecC) throws XMLStreamException {
+    private static Evidence processEvidence(SMInputCursor ecC) throws XMLStreamException {
         Evidence evidence = new Evidence();
         SMInputCursor childCursor = ecC.childCursor();
         while (childCursor.getNext() != null) {
@@ -148,7 +166,7 @@ public class ReportParser {
         return evidence;
     }
 
-    private ScanInfo processScanInfo(SMInputCursor siC) throws XMLStreamException {
+    private static ScanInfo processScanInfo(SMInputCursor siC) throws XMLStreamException {
         SMInputCursor childCursor = siC.childCursor();
         ScanInfo scanInfo = new ScanInfo();
         while (childCursor.getNext() != null) {
@@ -160,7 +178,7 @@ public class ReportParser {
         return scanInfo;
     }
 
-    private ProjectInfo processProjectInfo(SMInputCursor piC) throws XMLStreamException {
+    private static ProjectInfo processProjectInfo(SMInputCursor piC) throws XMLStreamException {
         SMInputCursor childCursor = piC.childCursor();
         ProjectInfo projectInfo = new ProjectInfo();
         while (childCursor.getNext() != null) {
