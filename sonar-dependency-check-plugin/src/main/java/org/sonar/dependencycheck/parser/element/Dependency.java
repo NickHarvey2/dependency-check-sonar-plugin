@@ -30,7 +30,6 @@ public class Dependency {
     private String sha1Hash;
     private Collection<Evidence> evidenceCollected = Collections.emptyList();
     private Collection<Vulnerability> vulnerabilities = Collections.emptyList();
-    private Collection<Identifier> identifiers = Collections.emptyList();
 
     public String getFileName() {
         return fileName;
@@ -80,11 +79,4 @@ public class Dependency {
         this.vulnerabilities = vulnerabilities;
     }
 
-    public Collection<Identifier> getIdentifiers() {
-        return identifiers;
-    }
-
-    public void setIdentifiers(Collection<Identifier> identifiers) {
-        this.identifiers = identifiers;
-    }
 }

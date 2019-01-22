@@ -38,7 +38,9 @@ import org.sonar.dependencycheck.base.DependencyCheckMetrics;
 import org.sonar.dependencycheck.base.DependencyCheckUtils;
 import org.sonar.dependencycheck.parser.ReportParser;
 import org.sonar.dependencycheck.parser.XmlReportFile;
-import org.sonar.dependencycheck.parser.element.*;
+import org.sonar.dependencycheck.parser.element.Analysis;
+import org.sonar.dependencycheck.parser.element.Dependency;
+import org.sonar.dependencycheck.parser.element.Vulnerability;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -96,11 +98,6 @@ public class DependencyCheckSensor implements Sensor {
         if (StringUtils.isNotBlank(vulnerability.getCwe())) {
             sb.append("Category: ").append(vulnerability.getCwe()).append(" | ");
         }
-        if (dependency.getIdentifiers().size() > 0) {
-            for (Identifier identifier : dependency.getIdentifiers()) {
-                sb.append("Identifier: ").append(identifier.getName()).append(", CPE Confidence: ").append(identifier.getCpeConfidence()).append(", Type: ").append(identifier.getType()).append(" | ");
-            }
-        }
         sb.append(vulnerability.getDescription());
         return sb.toString();
     }
@@ -125,25 +122,21 @@ public class DependencyCheckSensor implements Sensor {
         if (analysis.getDependencies() == null) {
             return;
         }
-
-        boolean ignoreLowConf = context.settings().getBoolean(DependencyCheckConstants.IGNORE_LOW_CONFIDENCE_VULNS);
         for (Dependency dependency : analysis.getDependencies()) {
-            if (!(ignoreLowConf && dependency.getIdentifiers().stream().allMatch(x -> x.getCpeConfidence().equals(CpeConfidence.LOW)))) {
-                InputFile testFile = fileSystem.inputFile(fileSystem.predicates().hasPath(dependency.getFilePath()));
+            InputFile testFile = fileSystem.inputFile(fileSystem.predicates().hasPath(dependency.getFilePath()));
 
-                int depVulnCount = dependency.getVulnerabilities().size();
+            int depVulnCount = dependency.getVulnerabilities().size();
 
-                if (depVulnCount > 0) {
-                    vulnerableDependencies++;
-                    saveMetricOnFile(context, testFile, DependencyCheckMetrics.VULNERABLE_DEPENDENCIES, (double) depVulnCount);
-                }
-                saveMetricOnFile(context, testFile, DependencyCheckMetrics.TOTAL_VULNERABILITIES, (double) depVulnCount);
-                saveMetricOnFile(context, testFile, DependencyCheckMetrics.TOTAL_DEPENDENCIES, (double) depVulnCount);
+            if (depVulnCount > 0) {
+                vulnerableDependencies++;
+                saveMetricOnFile(context, testFile, DependencyCheckMetrics.VULNERABLE_DEPENDENCIES, (double) depVulnCount);
+            }
+            saveMetricOnFile(context, testFile, DependencyCheckMetrics.TOTAL_VULNERABILITIES, (double) depVulnCount);
+            saveMetricOnFile(context, testFile, DependencyCheckMetrics.TOTAL_DEPENDENCIES, (double) depVulnCount);
 
-                for (Vulnerability vulnerability : dependency.getVulnerabilities()) {
-                    addIssue(context, dependency, vulnerability);
-                    vulnerabilityCount++;
-                }
+            for (Vulnerability vulnerability : dependency.getVulnerabilities()) {
+                addIssue(context, dependency, vulnerability);
+                vulnerabilityCount++;
             }
         }
     }
