@@ -88,10 +88,35 @@ public class ReportParser {
                 dependency.setEvidenceCollected(processEvidenceCollected(childCursor));
             } else if ("vulnerabilities".equals(nodeName)) {
                 dependency.setVulnerabilities(processVulnerabilities(childCursor));
+            } else if ("identifiers".equals(nodeName)) {
+                dependency.setIdentifiers(processIdentifiers(childCursor));
             }
 
         }
         return dependency;
+    }
+
+    private Collection<Identifier> processIdentifiers(SMInputCursor identC) throws XMLStreamException {
+        Collection<Identifier> identifiers = new ArrayList<>();
+        SMInputCursor cursor = identC.childElementCursor("identifier");
+        while (cursor.getNext() != null) {
+            identifiers.add(processIdentifier(cursor));
+        }
+        return identifiers;
+    }
+
+    private Identifier processIdentifier(SMInputCursor identC) throws XMLStreamException {
+        Identifier identifier = new Identifier();
+        identifier.setType(StringUtils.trim(identC.getAttrValue("type")));
+        identifier.setCpeConfidence(CpeConfidence.valueOf(StringUtils.trim(identC.getAttrValue("confidence"))));
+        SMInputCursor childCursor = identC.childCursor();
+        while (childCursor.getNext() != null) {
+            String nodeName = childCursor.getLocalName();
+            if ("name".equals(nodeName)) {
+                identifier.setName(StringUtils.trim(childCursor.collectDescendantText(false)));
+            }
+        }
+        return identifier;
     }
 
     private Collection<Vulnerability> processVulnerabilities(SMInputCursor vulnC) throws XMLStreamException {

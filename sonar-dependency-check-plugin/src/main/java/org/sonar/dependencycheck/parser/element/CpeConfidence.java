@@ -17,15 +17,12 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package org.sonar.dependencycheck.base;
 
-public final class DependencyCheckConstants {
+package org.sonar.dependencycheck.parser.element;
 
-    public static final String REPORT_PATH_PROPERTY = "sonar.dependencyCheck.reportPath";
-    public static final String HTML_REPORT_PATH_PROPERTY = "sonar.dependencyCheck.htmlReportPath";
-    public static final String IGNORE_LOW_CONFIDENCE_VULNS = "sonar.dependencyCheck.ignoreLowConfidenceVulns";
-
-    private DependencyCheckConstants() {
-    }
-
+public enum CpeConfidence {
+    LOW,
+    MEDIUM,
+    HIGH,
+    HIGHEST
 }
