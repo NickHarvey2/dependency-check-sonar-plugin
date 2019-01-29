@@ -40,6 +40,8 @@ import org.sonar.dependencycheck.parser.element.Evidence;
 import org.sonar.dependencycheck.parser.element.ProjectInfo;
 import org.sonar.dependencycheck.parser.element.ScanInfo;
 import org.sonar.dependencycheck.parser.element.Vulnerability;
+import org.sonar.dependencycheck.parser.element.Identifier;
+import org.sonar.dependencycheck.parser.element.CpeConfidence;
 
 public class ReportParser {
 
@@ -74,6 +76,29 @@ public class ReportParser {
         return new Analysis(scanInfo, projectInfo, dependencies);
     }
 
+    private static Collection<Identifier> processIdentifiers(SMInputCursor identC) throws XMLStreamException {
+        Collection<Identifier> identifiers = new ArrayList<>();
+        SMInputCursor cursor = identC.childElementCursor("identifier");
+        while (cursor.getNext() != null) {
+            identifiers.add(processIdentifier(cursor));
+        }
+        return identifiers;
+    }
+
+    private static Identifier processIdentifier(SMInputCursor identC) throws XMLStreamException {
+        Identifier identifier = new Identifier();
+        identifier.setType(StringUtils.trim(identC.getAttrValue("type")));
+        identifier.setCpeConfidence(CpeConfidence.valueOf(StringUtils.trim(identC.getAttrValue("confidence"))));
+        SMInputCursor childCursor = identC.childCursor();
+        while (childCursor.getNext() != null) {
+            String nodeName = childCursor.getLocalName();
+            if ("name".equals(nodeName)) {
+                identifier.setName(StringUtils.trim(childCursor.collectDescendantText(false)));
+            }
+        }
+        return identifier;
+    }
+
     private static Collection<Dependency> processDependencies(SMInputCursor depC) throws XMLStreamException {
         Collection<Dependency> dependencies = new ArrayList<>();
         SMInputCursor cursor = depC.childElementCursor("dependency");
@@ -100,6 +125,8 @@ public class ReportParser {
                 dependency.setEvidenceCollected(processEvidenceCollected(childCursor));
             } else if ("vulnerabilities".equals(nodeName)) {
                 dependency.setVulnerabilities(processVulnerabilities(childCursor));
+            } else if ("identifiers".equals(nodeName)) {
+                dependency.setIdentifiers(processIdentifiers(childCursor));
             }
 
         }

@@ -22,6 +22,7 @@ package org.sonar.dependencycheck;
 import org.sonar.api.Plugin;
 import org.sonar.api.PropertyType;
 import org.sonar.api.config.PropertyDefinition;
+import org.sonar.api.resources.Qualifiers;
 import org.sonar.dependencycheck.base.DependencyCheckConstants;
 import org.sonar.dependencycheck.base.DependencyCheckMetrics;
 import org.sonar.dependencycheck.page.DependencyCheckReportPage;
@@ -92,6 +93,13 @@ public final class DependencyCheckPlugin implements Plugin {
                         .name("Summarize")
                         .description("When enabled we summarize all vulnerabilities per dependency.")
                         .defaultValue(Boolean.toString(DependencyCheckConstants.SUMMARIZE_PROPERTY_DEFAULT))
+                        .type(PropertyType.BOOLEAN)
+                        .build(),
+                PropertyDefinition.builder(DependencyCheckConstants.IGNORE_LOW_CONFIDENCE_VULNS)
+                        .name("Ignore Vulnerabilities with low confidence score")
+                        .description("When set to true, dependencies identified as vulnerable with low confidence will not generate issues")
+                        .onlyOnQualifiers(Qualifiers.PROJECT)
+                        .defaultValue("false")
                         .type(PropertyType.BOOLEAN)
                         .build()
         );

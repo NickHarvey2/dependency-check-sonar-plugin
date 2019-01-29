@@ -32,6 +32,7 @@ public class Dependency {
     private String sha1Hash;
     private Collection<Evidence> evidenceCollected = Collections.emptyList();
     private List<Vulnerability> vulnerabilities = Collections.emptyList();
+    private Collection<Identifier> identifiers = Collections.emptyList();
 
     public String getFileName() {
         return fileName;
@@ -86,4 +87,11 @@ public class Dependency {
         Collections.sort(this.vulnerabilities, comp.reversed());
     }
 
+    public Collection<Identifier> getIdentifiers() {
+        return identifiers;
+    }
+
+    public void setIdentifiers(Collection<Identifier> identifiers) {
+        this.identifiers = identifiers;
+    }
 }
